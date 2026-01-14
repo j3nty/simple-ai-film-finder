@@ -1,0 +1,61 @@
+services:
+  ollama:
+    build:
+      context: .
+      dockerfile: ollama.Dockerfile
+    volumes:
+      - ollama_storage:/root/.ollama
+    entrypoint: >
+      /bin/sh -c "
+        ollama serve &
+        sleep 10 &&
+        ollama list | grep -q 'tinyllama:1.1b' || ollama pull tinyllama:1.1b &&
+        wait
+      "
+    networks:
+      - app-network
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  web:
+    build: .
+    container_name: django_app
+    command: ["gunicorn", "project.wsgi:application", "--bind", "0.0.0.0:8000"]
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - app-network
+    expose:
+      - "8000"
+    volumes:
+      - static_volume:/app/static
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - static_volume:/app/static:ro
+    depends_on:
+      - web
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  ollama_storage:
+  static_volume:
