@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Ask AI{% endblock title %}
+
+{% block content %}
+    <div class="wrapper">
+        <h1>Which films have you seen?</h1>
+        <p>Hello, {{ user.username }}</p>
+        <form action="{% url "generate_movie" %}" method="post">
+            {% csrf_token %}
+            <label for="person_ask">Write in section below</label>
+            <textarea name="person_ask" id="person_ask" placeholder='Write your favorite films'></textarea>
+            <button type="submit">Get movies</button>
+        </form>
+        {% if answer %}
+            <div class="result">
+                <h2>Recommended Movies:</h2>
+                <p>{{ answer }}</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock content %}
