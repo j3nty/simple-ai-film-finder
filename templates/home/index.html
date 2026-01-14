@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock title %}
+{% block content %}
+    <div class="wrapper">
+        <h1>Looking for movies today? Try AI recommend you!</h1>
+        <form action="{% url "generate_movie" %}" method="get">
+            <button type="submit">Try now!</button>
+        </form>
+        {% if answer %}
+            <p>{{answer}}</p>
+        {% endif %}
+    </div>
+{% endblock content %}
